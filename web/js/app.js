@@ -108,6 +108,15 @@ function toast(text, bad = false) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
 }
 
+function openSheet(id) {
+  $$('.sheet').forEach((x) => x.classList.toggle('open', x.id === id));
+  $('#sheet-backdrop').classList.add('open');
+}
+function closeSheets() {
+  $$('.sheet.open').forEach((x) => x.classList.remove('open'));
+  $('#sheet-backdrop').classList.remove('open');
+}
+
 function busy(text) {
   $('#busy-text').textContent = text || '';
   $('#busy').classList.toggle('hidden', !text);
@@ -229,7 +238,10 @@ function renderStatus() {
   }
 
   // Máquina
-  $('#caps-label').textContent = machine.caps == null ? 'sin configurar' : `${machine.caps} en stock`;
+  $('#caps-label').textContent = machine.caps == null ? 'Sin configurar' : `${machine.caps} en stock`;
+  $('#sum-standby').textContent = STANDBY_OPTIONS.find(([sec]) => sec === machine.standby)?.[1] ?? '—';
+  $('#sum-hardness').textContent = machine.hardness == null ? '—' : `Nivel ${machine.hardness}`;
+  $('#sum-maint').textContent = s.descaleNeeded ? 'Descalcificar' : 'Al día';
   if (document.activeElement !== $('#caps-input')) $('#caps-input').value = machine.caps ?? 0;
   if (document.activeElement !== $('#caps-threshold')) $('#caps-threshold').value = machine.capsThreshold ?? 10;
   segmented($('#standby'), STANDBY_OPTIONS, machine.standby, (sec) =>
@@ -270,7 +282,9 @@ function renderInfo() {
     ['Dirección', i.address],
   ]);
   $('#key-view').textContent = machine.key ?? '—';
-  $('#sim-card').classList.toggle('hidden', !demo);
+  $('#sum-info').textContent = `v${i.firmware}`;
+  $('#sum-key').textContent = machine.key ? `${machine.key.slice(0, 4)}…` : '—';
+  $('#sim-row').hidden = !demo;
 }
 
 function renderCupSizes() {
@@ -281,9 +295,8 @@ function renderCupSizes() {
   for (const c of CUP_SIZES) {
     const row = document.createElement('label');
     row.className = 'cup-row';
-    row.innerHTML = `<div class="row"><span>${c.name}</span><b><span class="v">${sizes[c.id]}</span> ml</b></div>
-      <input type="range" min="${c.min}" max="${c.max}" step="1" value="${sizes[c.id]}">
-      <div class="row"><small>${c.min} ml</small><small>fábrica ${c.def} ml</small><small>${c.max} ml</small></div>`;
+    row.innerHTML = `<div class="row"><span>${c.name} <small>· fábrica ${c.def}</small></span><b><span class="v">${sizes[c.id]}</span> ml</b></div>
+      <input type="range" min="${c.min}" max="${c.max}" step="1" value="${sizes[c.id]}">`;
     const input = row.querySelector('input');
     input.oninput = () => (row.querySelector('.v').textContent = input.value);
     input.onchange = async () => {
@@ -297,6 +310,7 @@ function renderCupSizes() {
     };
     el.appendChild(row);
   }
+  $('#sum-cups').textContent = `${sizes.ristretto} · ${sizes.espresso} · ${sizes.lungo} ml`;
   renderDrinks();
 }
 
@@ -382,6 +396,7 @@ async function connect(useDemo) {
     show('screen-main');
   });
   machine.addEventListener('disconnected', () => {
+    closeSheets();
     show('screen-connect');
     $('#conn-pill').classList.add('off');
     toast('Cafetera desconectada', true);
@@ -454,6 +469,7 @@ function bind() {
       const clamp = (v) => Math.max(0, Math.min(999, +v || 0));
       await machine.setCaps(clamp($('#caps-input').value), clamp($('#caps-threshold').value));
       toast('Cápsulas guardadas');
+      closeSheets();
     });
 
   $('#btn-cup-defaults').onclick = () => {
@@ -464,7 +480,11 @@ function bind() {
     });
   };
 
-  $('#btn-schedule-toggle').onclick = () => $('#schedule-panel').classList.toggle('hidden');
+  $$('[data-sheet]').forEach((b) => (b.onclick = () => openSheet(b.dataset.sheet)));
+  $$('[data-close]').forEach((b) => (b.onclick = closeSheets));
+  $('#sheet-backdrop').onclick = closeSheets;
+
+  $('#btn-schedule-toggle').onclick = () => openSheet('sheet-schedule');
   $('#btn-schedule').onclick = () => {
     const [h, m] = $('#schedule-time').value.split(':').map(Number);
     const when = new Date();
@@ -475,7 +495,7 @@ function bind() {
       const r = await machine.schedule(d.type, TEMP[prefs.temp], when.getTime());
       const at = when.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
       report(r, `${d.name} programado para las ${at}`);
-      if (r === RESPONSE.ok) $('#schedule-panel').classList.add('hidden');
+      if (r === RESPONSE.ok) closeSheets();
     });
   };
   $('#btn-cancel-schedule').onclick = () =>
