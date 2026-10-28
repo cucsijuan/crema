@@ -1,7 +1,7 @@
 {
   "name": "Crema",
   "short_name": "Crema",
-  "description": "Control por Bluetooth para la cafetera Expert",
+  "description": "Bluetooth control for the Nespresso Expert coffee machine",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#14110f",

@@ -1,4 +1,4 @@
-// Arma dist/ para la app nativa: copia web/ y empaqueta el plugin Bluetooth.
+// Builds dist/ for the native app: copies web/ and bundles the Bluetooth plugin.
 import { cpSync, rmSync } from 'node:fs';
 import { build } from 'esbuild';
 
@@ -11,4 +11,4 @@ await build({
   minify: true,
   outfile: 'dist/js/ble-native.js',
 });
-console.log('dist/ listo');
+console.log('dist/ ready');

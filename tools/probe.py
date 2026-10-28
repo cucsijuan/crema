@@ -1,9 +1,9 @@
-"""Herramienta de diagnóstico para la Nespresso Expert por BLE.
+"""BLE diagnostic tool for the Nespresso Expert.
 
-Uso:
-  python tools/probe.py info        # lee datos sin autenticar
-  python tools/probe.py onboard     # graba clave-cafetera.txt en la máquina (solo si no tiene clave)
-  python tools/probe.py status      # autentica y lee todos los sensores
+Usage:
+  python tools/probe.py info        # reads data without authenticating
+  python tools/probe.py onboard     # stores machine-key.txt in the machine (only if it has no key)
+  python tools/probe.py status      # authenticates and reads every sensor
 """
 import asyncio
 import sys
@@ -13,7 +13,7 @@ from bleak import BleakClient
 
 from common import find_machine
 
-KEY_FILE = Path(__file__).resolve().parent.parent / "clave-cafetera.txt"
+KEY_FILE = Path(__file__).resolve().parent.parent / "machine-key.txt"
 
 
 def u(short):
@@ -44,9 +44,9 @@ async def read(client, uuid):
 async def main(mode):
     dev = await find_machine()
     if not dev:
-        sys.exit("No encuentro la cafetera (¿encendida y cerca?)")
+        sys.exit("Machine not found (is it on and nearby?)")
     async with BleakClient(dev, timeout=20) as c:
-        print("conectado")
+        print("connected")
         print("onboard:", await read(c, ONBOARD))
         print("info:   ", await read(c, INFO))
         print("serial: ", bytes.fromhex((await read(c, SERIAL)).replace(" ", "")).decode(errors="replace"))
@@ -55,25 +55,25 @@ async def main(mode):
         key = bytes.fromhex(KEY_FILE.read_text().strip())
         if mode == "onboard":
             await c.write_gatt_char(PAIR, b"\x01", response=True)
-            print("txLevel escrito")
+            print("txLevel written")
             try:
                 await c.write_gatt_char(AUTH, key, response=True)
-                print("clave escrita (sin cifrar)")
+                print("key written (unencrypted)")
             except Exception as e:  # noqa: BLE001
-                print("clave rechazada, emparejando:", e)
+                print("key rejected, bonding:", e)
                 await c.pair()
                 await c.write_gatt_char(AUTH, key, response=True)
-                print("clave escrita tras emparejar")
+                print("key written after bonding")
             await asyncio.sleep(2)
             print("onboard:", await read(c, ONBOARD))
             return
         try:
             await c.write_gatt_char(AUTH, key, response=True)
         except Exception as e:  # noqa: BLE001
-            print("auth falló, emparejando:", e)
+            print("auth failed, bonding:", e)
             await c.pair()
             await c.write_gatt_char(AUTH, key, response=True)
-        print("autenticado")
+        print("authenticated")
         for name, uuid in [("state", STATE), ("slider", SLIDER), ("caps", CAPS), ("hardness", HARDNESS)] + [
             (x[4:8], x) for x in UNKNOWN
         ]:

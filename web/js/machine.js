@@ -1,4 +1,4 @@
-// Controlador de alto nivel: conexión, vinculación, estado y comandos.
+// High-level controller: connection, pairing, state and commands.
 
 import * as P from './protocol.js';
 
@@ -34,7 +34,7 @@ export class Machine extends EventTarget {
     this.dispatchEvent(new CustomEvent(type, { detail }));
   }
 
-  // GATT no admite operaciones simultáneas: todo pasa por esta cola.
+  // GATT does not allow concurrent operations: everything goes through this queue.
   exclusive(fn) {
     const run = this.queue.then(fn, fn);
     this.queue = run.catch(() => {});
@@ -63,7 +63,7 @@ export class Machine extends EventTarget {
     try {
       localStorage.setItem(KEY_STORE, JSON.stringify(all));
     } catch {
-      /* almacenamiento no disponible */
+      /* storage unavailable */
     }
   }
 
@@ -81,7 +81,7 @@ export class Machine extends EventTarget {
     else this.emit('needsPairing');
   }
 
-  // Graba una clave nueva en la máquina (equivale a vincular la app oficial).
+  // Stores a new key in the machine (same as pairing the official app).
   async pair(key = P.newAuthKey()) {
     await this.write(P.CHAR.pair, new Uint8Array([1]));
     await this.write(P.CHAR.auth, P.keyBytes(key));
@@ -95,9 +95,9 @@ export class Machine extends EventTarget {
     await this.authenticate();
   }
 
-  // Esta máquina acepta la clave pero no la guarda (memoria de vinculaciones
-  // llena), así que se repite la secuencia de vinculación en cada conexión.
-  // A veces rechaza los primeros intentos, así que se reintenta reconectando.
+  // This machine accepts the key but does not persist it (pairing memory is
+  // full), so the pairing sequence is repeated on every connection. It
+  // sometimes rejects the first attempts, so it retries after reconnecting.
   async authenticate(tries = 4) {
     for (let i = 1; i <= tries; i++) {
       try {
@@ -141,10 +141,10 @@ export class Machine extends EventTarget {
         }),
       );
     } catch {
-      /* notificaciones opcionales */
+      /* optional notifications */
     }
     this.emit('ready');
-    this.readCupSizes().catch((e) => console.warn('tamaños', e));
+    this.readCupSizes().catch((e) => console.warn('cup sizes', e));
   }
 
   async refresh() {
@@ -159,13 +159,13 @@ export class Machine extends EventTarget {
       this.programmed = P.decodeProgrammedBrew(await this.read(P.CHAR.programmedBrew));
       if (this.programmed) this.programmed.at = Date.now() + this.programmed.seconds * 1000;
     } catch {
-      /* no disponibles en todas las versiones */
+      /* not available on every firmware */
     }
     this.emit('status', this.status);
   }
 
-  // Elegir la bebida en 3a14 y leer 3a24. La primera lectura tras elegir puede
-  // devolver el valor anterior, por eso se espera y se descarta una lectura.
+  // Select the drink on 3a14, then read 3a24. The first read after selecting may
+  // return the previous value, hence the wait and the discarded read.
   readCupSize(kind) {
     return this.exclusive(async () => {
       await this.t.write(P.CHAR.cupTarget, P.cupTargetCommand(kind));
@@ -220,7 +220,7 @@ export class Machine extends EventTarget {
     return this.command(P.brewCommand(P.BREW.custom, temp));
   }
 
-  // Programa una preparación: la máquina la lanza sola a la hora indicada.
+  // Schedules a brew: the machine starts it on its own at the given time.
   async schedule(type, temp, when) {
     const seconds = Math.max(60, Math.round((when - Date.now()) / 1000));
     const r = await this.command(P.brewCommand(type, temp, seconds));

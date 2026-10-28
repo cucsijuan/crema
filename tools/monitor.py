@@ -1,6 +1,6 @@
-"""Se queda conectado y registra todas las notificaciones durante N segundos.
+"""Stays connected and logs every notification for N seconds.
 
-Uso: python tools/monitor.py 300
+Usage: python tools/monitor.py 300
 """
 import asyncio
 import sys
@@ -12,7 +12,7 @@ from bleak import BleakClient
 from common import find_machine
 
 ROOT = Path(__file__).resolve().parent.parent
-KEY = bytes.fromhex((ROOT / "clave-cafetera.txt").read_text().strip())
+KEY = bytes.fromhex((ROOT / "machine-key.txt").read_text().strip())
 LOG = ROOT / "snapshots" / "monitor.log"
 
 
@@ -34,17 +34,17 @@ async def session(seconds):
         await asyncio.sleep(1)
         await c.write_gatt_char(u("3a61"), b"\x01", response=True)
         await c.write_gatt_char(u("3a41"), KEY, response=True)
-        log("conectado y autenticado")
+        log("connected and authenticated")
         for svc in c.services:
             for ch in svc.characteristics:
                 if "notify" in ch.properties:
                     name = ch.uuid[4:8]
                     await c.start_notify(ch, lambda _s, b, n=name: log(f"{n}  {b.hex(' ')}"))
-                    log(f"suscripto a {name}")
+                    log(f"subscribed to {name}")
         end = time.time() + seconds
         while time.time() < end and c.is_connected:
             await asyncio.sleep(1)
-        log("fin" if c.is_connected else "desconectado")
+        log("done" if c.is_connected else "disconnected")
 
 
 async def main(seconds):
@@ -53,7 +53,7 @@ async def main(seconds):
         try:
             return await session(seconds)
         except Exception as e:  # noqa: BLE001
-            log(f"intento {i + 1} falló: {e}")
+            log(f"attempt {i + 1} failed: {e}")
             await asyncio.sleep(3)
 
 

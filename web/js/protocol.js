@@ -1,6 +1,6 @@
-// Protocolo BLE de la Nespresso Expert (ingeniería inversa de la comunidad,
-// verificado contra una Expert C80 con firmware 6.1).
-// Sin dependencias de transporte: lo usan tanto Web Bluetooth como la app nativa.
+// BLE protocol of the Nespresso Expert (community reverse engineering,
+// verified against an Expert C80 running firmware 6.1).
+// Transport-agnostic: used by both Web Bluetooth and the native app.
 
 const uuid = (short) => `06aa${short}-f22a-11e3-9daa-0002a5d5c51b`;
 
@@ -18,7 +18,7 @@ export const CHAR = {
   response: uuid('3a52'),
   caps: uuid('3a15'),
   capsThreshold: uuid('3a25'),
-  hardness: uuid('3a44'), // también guarda el apagado automático
+  hardness: uuid('3a44'), // also holds the auto power-off delay
   cupTarget: uuid('3a14'),
   cupVolume: uuid('3a24'),
   programmedBrew: uuid('3a32'),
@@ -34,17 +34,17 @@ export const SERVICE_OF = {
   [CHAR.caps]: SERVICES[4], [CHAR.capsThreshold]: SERVICES[4],
 };
 
-// Tamaños de la perilla (SDK oficial: CupSizeOperations / CupSizeInterval).
+// Dial cup sizes (official SDK: CupSizeOperations / CupSizeInterval). Names live in i18n.js.
 export const CUP_SIZES = [
-  { kind: 0, id: 'ristretto', name: 'Ristretto', min: 15, max: 30, def: 25 },
-  { kind: 1, id: 'espresso', name: 'Espresso', min: 30, max: 70, def: 40 },
-  { kind: 2, id: 'lungo', name: 'Lungo', min: 70, max: 130, def: 110 },
-  { kind: 3, id: 'americanoCoffee', name: 'Americano · café', min: 15, max: 110, def: 25 },
-  { kind: 4, id: 'americanoWater', name: 'Americano · agua', min: 25, max: 300, def: 125 },
-  { kind: 5, id: 'hotWater', name: 'Agua caliente', min: 50, max: 300, def: 200 },
+  { kind: 0, id: 'ristretto', min: 15, max: 30, def: 25 },
+  { kind: 1, id: 'espresso', min: 30, max: 70, def: 40 },
+  { kind: 2, id: 'lungo', min: 70, max: 130, def: 110 },
+  { kind: 3, id: 'americanoCoffee', min: 15, max: 110, def: 25 },
+  { kind: 4, id: 'americanoWater', min: 25, max: 300, def: 125 },
+  { kind: 5, id: 'hotWater', min: 50, max: 300, def: 200 },
 ];
 
-// Apagado automático en segundos (SDK oficial: StandByDelayOption).
+// Auto power-off delay in seconds (official SDK: StandByDelayOption).
 export const STANDBY_OPTIONS = [
   [540, '9 min'],
   [1800, '30 min'],
@@ -87,7 +87,7 @@ export const MACHINE_STATE = [
   'hardnessSettings', 'standbySettings',
 ];
 
-// delaySeconds > 0 programa la preparación (la máquina la lanza sola).
+// delaySeconds > 0 schedules the brew (the machine starts it on its own).
 export function brewCommand(type, temp = TEMP.medium, delaySeconds = 0) {
   const d = delaySeconds >>> 0;
   return new Uint8Array([
@@ -107,7 +107,7 @@ export function recipePrepareCommand(coffeeMl, waterMl) {
 
 export const ABORT_COMMAND = new Uint8Array([0x03, 0x06, 0x01, 0x02]);
 
-// Sirve para el stock (3a15) y para el umbral de aviso (3a25).
+// Used for both the stock (3a15) and the low-stock threshold (3a25).
 export function capsCommand(count) {
   return new Uint8Array([(count >> 8) & 0xff, count & 0xff]);
 }
@@ -124,7 +124,7 @@ export function decodeState(bytes) {
     descaleNeeded: !!(b(0) & 0x04),
     capsuleJammed: !!(b(0) & 0x10),
     waterTempLow: !!(b(1) & 0x01),
-    // Visto al programar un tamaño manteniendo el botón: byte1 = 0x24.
+    // Seen while programming a cup size by holding the button: byte1 = 0x24.
     programmingCup: !!(b(1) & 0x20),
     trayIssue: !!(b(1) & 0x40),
     capsuleEngaged: !!(b(1) & 0x80),
@@ -202,6 +202,6 @@ export function newAuthKey() {
 
 export function keyBytes(keyHex) {
   const clean = keyHex.replace(/[^0-9a-f]/gi, '');
-  if (clean.length !== 16) throw new Error('La clave debe tener 16 caracteres hexadecimales');
+  if (clean.length !== 16) throw new Error('Key must be 16 hex characters');
   return new Uint8Array(clean.match(/../g).map((x) => parseInt(x, 16)));
 }

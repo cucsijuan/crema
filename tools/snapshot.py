@@ -1,10 +1,10 @@
-"""Lee (sin escribir nada de configuración) todas las características legibles
-y las guarda en snapshots/<nombre>.json para comparar cambios de ajustes.
+"""Reads every readable characteristic (without writing any setting) and saves
+them to snapshots/<name>.json to compare settings changes.
 
-Uso:
-  python tools/snapshot.py antes
-  python tools/snapshot.py despues
-  python tools/snapshot.py --diff antes despues
+Usage:
+  python tools/snapshot.py before
+  python tools/snapshot.py after
+  python tools/snapshot.py --diff before after
 """
 import asyncio
 import json
@@ -17,7 +17,7 @@ from common import find_machine
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "snapshots"
-KEY = bytes.fromhex((ROOT / "clave-cafetera.txt").read_text().strip())
+KEY = bytes.fromhex((ROOT / "machine-key.txt").read_text().strip())
 
 
 def u(short):
@@ -27,7 +27,7 @@ def u(short):
 async def snapshot(name):
     dev = await find_machine()
     if not dev:
-        sys.exit("No encuentro la cafetera")
+        sys.exit("Machine not found")
     async with BleakClient(dev, timeout=20) as c:
         await c.pair()
         await asyncio.sleep(1)
@@ -57,14 +57,14 @@ def diff(a, b):
 
 
 async def with_retries(name, tries=3):
-    # La máquina a veces rechaza el primer intento de autenticación.
+    # The machine sometimes rejects the first authentication attempt.
     for i in range(tries):
         try:
             return await snapshot(name)
         except Exception as e:  # noqa: BLE001
-            print(f"intento {i + 1} falló: {e}")
+            print(f"attempt {i + 1} failed: {e}")
             await asyncio.sleep(3)
-    sys.exit("No se pudo autenticar")
+    sys.exit("Could not authenticate")
 
 
 if sys.argv[1] == "--diff":

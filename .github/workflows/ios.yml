@@ -1,12 +1,12 @@
-name: App de iPhone
+name: iPhone app
 
-# Compila un .ipa sin firmar. Se instala con Sideloadly (Windows/macOS),
-# que lo firma con tu Apple ID al instalarlo.
+# Builds an unsigned .ipa. Install it with Sideloadly (Windows/macOS),
+# which signs it with your Apple ID during installation.
 
 on:
   push:
     branches: [main]
-    paths: ['web/**', 'native/**', 'scripts/**', 'resources/**', 'package*.json', 'capacitor.config.json', '.github/workflows/ios.yml']
+    paths: ['web/**', 'native/**', 'scripts/**', 'resources/**', 'ios-resources/**', 'package*.json', 'capacitor.config.json', '.github/workflows/ios.yml']
   workflow_dispatch:
 
 permissions:
@@ -27,23 +27,29 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Dependencias y web
+      - name: Dependencies and web build
         run: |
           npm ci
           npm run build
 
-      - name: Proyecto iOS
+      - name: iOS project
         run: |
           npx cap add ios
           PLIST=ios/App/App/Info.plist
-          /usr/libexec/PlistBuddy -c "Add :NSBluetoothAlwaysUsageDescription string 'Crema usa Bluetooth para conectarse a tu cafetera.'" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSBluetoothPeripheralUsageDescription string 'Crema usa Bluetooth para conectarse a tu cafetera.'" "$PLIST"
+          BT="Crema uses Bluetooth to connect to your coffee machine."
+          /usr/libexec/PlistBuddy -c "Add :NSBluetoothAlwaysUsageDescription string '$BT'" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSBluetoothPeripheralUsageDescription string '$BT'" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Delete :CFBundleLocalizations" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleLocalizations array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleLocalizations:0 string en" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleLocalizations:1 string es" "$PLIST"
+          python3 scripts/localize-ios.py ios/App
           /usr/libexec/PlistBuddy -c "Set :UIStatusBarStyle UIStatusBarStyleLightContent" "$PLIST" 2>/dev/null \
             || /usr/libexec/PlistBuddy -c "Add :UIStatusBarStyle string UIStatusBarStyleLightContent" "$PLIST"
           cp resources/icon-1024.png ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
           npx cap sync ios
 
-      - name: Compilar (sin firmar)
+      - name: Build (unsigned)
         run: |
           cd ios/App
           if [ -d App.xcworkspace ]; then TARGET="-workspace App.xcworkspace"; else TARGET="-project App.xcodeproj"; fi
@@ -60,10 +66,10 @@ jobs:
           name: Crema-ipa
           path: Crema.ipa
 
-      - name: Publicar en "Última versión"
+      - name: Publish as "Latest build"
         if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest --yes --cleanup-tag 2>/dev/null || true
-          gh release create latest Crema.ipa --title "Última versión" --notes "IPA sin firmar, compilado desde ${GITHUB_SHA::7}. Instalalo con Sideloadly." --latest
+          gh release create latest Crema.ipa --title "Latest build" --notes "Unsigned IPA built from ${GITHUB_SHA::7}. Install it with Sideloadly." --latest

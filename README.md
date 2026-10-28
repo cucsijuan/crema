@@ -1,52 +1,54 @@
 # Crema
 
-Control por Bluetooth para la cafetera **Nespresso Expert**, ahora que la app
-oficial ya no la soporta. Funciona como página web (Chrome en la PC, Bluefy en
-iPhone) y como app de iPhone.
+Bluetooth control for the **Nespresso Expert** coffee machine, now that the
+official app no longer supports it. Works as a web page (Chrome on a computer,
+Bluefy on iPhone) and as an iPhone app. Available in English and Spanish.
 
-> Proyecto independiente, sin relación con Nespresso. "Nespresso" y "Expert"
-> son marcas de sus dueños y se mencionan sólo para indicar compatibilidad.
+> Independent project, not affiliated with Nespresso. "Nespresso" and "Expert"
+> are trademarks of their owners and are only mentioned to state compatibility.
 
-## Qué hace
+## Features
 
-- Estado en vivo: calentando, lista, preparando, en reposo, sin agua,
-  descalcificar, palanca abierta.
-- Preparar ristretto, espresso, lungo, americano o agua caliente, con
-  temperatura baja, media o alta.
-- **Programar** una preparación para más tarde: la cafetera la hace sola.
-- Recetas a medida (ml de café + ml de agua) y guardarlas.
-- **Tamaños de la perilla**: cambiar cuántos ml sirve cada bebida.
-- **Apagado automático**: 9 min, 30 min, 2 h u 8 h.
-- Contador de cápsulas con aviso de stock bajo.
-- Dureza del agua, datos de la máquina y clave de vinculación.
+- Live status: heating up, ready, brewing, sleeping, no water, descale,
+  lever open.
+- Brew ristretto, espresso, lungo, americano or hot water at low, medium or
+  high temperature.
+- **Schedule** a brew for later: the machine starts it on its own.
+- Custom recipes (ml of coffee + ml of water) that can be saved.
+- **Dial cup sizes**: change how many ml each drink pours.
+- **Auto power-off**: 9 min, 30 min, 2 h or 8 h.
+- Capsule counter with a low-stock warning.
+- Water hardness, machine details and pairing key.
+- English and Spanish UI, following the device language (can be changed under
+  Machine → Language).
 
-## Usarla
+## Usage
 
-### Página web
+### Web page
 
 <https://cucsijuan.github.io/crema/>
 
-- **PC:** Google Chrome o Edge. En Linux hay que activar
+- **Computer:** Google Chrome or Edge. On Linux, enable
   `chrome://flags/#enable-experimental-web-platform-features`.
-- **iPhone:** abrila con el navegador **Bluefy** (Safari no tiene Bluetooth web).
+- **iPhone:** open it with the **Bluefy** browser (Safari has no Web Bluetooth).
 
-"Probar en modo demo" simula una cafetera para ver la app sin Bluetooth.
+"Try demo mode" simulates a machine so the app can be explored without Bluetooth.
 
-### App de iPhone (sideload desde Windows)
+### iPhone app (sideloaded from Windows)
 
-Cada cambio en `main` compila un `.ipa` sin firmar con GitHub Actions y lo
-publica en [Releases → Última versión](../../releases/tag/latest).
+Every push to `main` builds an unsigned `.ipa` with GitHub Actions and publishes
+it under [Releases → Latest build](../../releases/tag/latest).
 
-1. Instalá **iTunes** (versión web de Apple, no la de Microsoft Store) e
-   **iCloud** en Windows, y después [Sideloadly](https://sideloadly.io/).
-2. Conectá el iPhone por cable y confiá en la computadora.
-3. Arrastrá `Crema.ipa` a Sideloadly, poné tu Apple ID y tocá **Start**.
-4. En el iPhone: Ajustes → General → VPN y gestión de dispositivos → confiá en
-   tu Apple ID. En iOS 16 o superior también hay que activar
-   Ajustes → Privacidad y seguridad → **Modo desarrollador**.
+1. Install **iTunes** (Apple's web installer, not the Microsoft Store version)
+   and **iCloud** on Windows, then [Sideloadly](https://sideloadly.io/).
+2. Connect the iPhone with a cable and trust the computer.
+3. Drag `Crema.ipa` into Sideloadly, enter your Apple ID and press **Start**.
+4. On the iPhone: Settings → General → VPN & Device Management → trust your
+   Apple ID. On iOS 16 or later also enable
+   Settings → Privacy & Security → **Developer Mode**.
 
-Con un Apple ID gratuito la app dura **7 días**; después se vuelve a instalar
-igual (Sideloadly puede renovarla solo si queda abierto).
+With a free Apple ID the app lasts **7 days**; after that, install it again the
+same way (Sideloadly can refresh it automatically while it stays open).
 
 ### Local
 
@@ -54,78 +56,77 @@ igual (Sideloadly puede renovarla solo si queda abierto).
 npm run serve
 ```
 
-y abrir <http://localhost:8765>.
+then open <http://localhost:8765>.
 
-## Clave de vinculación
+## Pairing key
 
-La cafetera sólo acepta comandos de quien le presenta una clave de 8 bytes. La
-primera vez, "Vincular esta cafetera" genera una; después se ve y se copia en
-Máquina → Clave, para usar la misma en todos los dispositivos ("Ya tengo una
-clave"). La máquina guarda unas 25 vinculaciones en total: no vincules de nuevo
-si no hace falta.
+The machine only accepts commands from clients that present an 8-byte key. The
+first time, "Pair this machine" generates one; afterwards it can be viewed and
+copied under Machine → Key, to use the same key on every device ("I already
+have a key"). The machine stores about 25 pairings in total, so avoid pairing
+again unless needed.
 
-## Estructura
+## Layout
 
-| Ruta | Qué es |
+| Path | What it is |
 |---|---|
-| `web/js/protocol.js` | UUIDs, comandos y decodificación |
-| `web/js/transport.js` | Transportes: Web Bluetooth, Bluetooth nativo (iPhone) y simulador |
-| `web/js/machine.js` | Conexión, vinculación y comandos de alto nivel |
-| `web/js/app.js` | Interfaz |
-| `native/`, `scripts/`, `capacitor.config.json` | Empaquetado como app de iPhone con Capacitor |
-| `tools/` | Diagnóstico desde Linux con Python y `bleak` |
-| `.github/workflows/` | Publicación de la página y compilación del `.ipa` |
+| `web/js/protocol.js` | UUIDs, commands and decoding |
+| `web/js/transport.js` | Transports: Web Bluetooth, native Bluetooth (iPhone) and simulator |
+| `web/js/machine.js` | Connection, pairing and high-level commands |
+| `web/js/i18n.js` | UI strings (English and Spanish) |
+| `web/js/app.js` | User interface |
+| `native/`, `scripts/`, `capacitor.config.json` | iPhone packaging with Capacitor |
+| `tools/` | Diagnostics from Linux with Python and `bleak` |
+| `.github/workflows/` | Web page deployment and `.ipa` build |
 
-Las herramientas de `tools/` leen la clave de `clave-cafetera.txt` (no se sube
-al repo) y buscan la cafetera por nombre; con `EXPERT_ADDRESS` se puede fijar la
-dirección.
+The scripts in `tools/` read the key from `machine-key.txt` (never committed)
+and look the machine up by name; `EXPERT_ADDRESS` pins a specific address.
 
-## Créditos
+## Credits
 
-El protocolo se basa en el trabajo de
+The protocol builds on the work of
 [bulldog5046/ha_nespresso_integration](https://github.com/bulldog5046/ha_nespresso_integration),
-[petergullberg/brewbutton](https://github.com/petergullberg/brewbutton) y
+[petergullberg/brewbutton](https://github.com/petergullberg/brewbutton) and
 [renaudallard/homeassistant_nespresso_smart](https://github.com/renaudallard/homeassistant_nespresso_smart),
-más lo documentado abajo.
+plus the notes below.
 
-## Notas de protocolo
+## Protocol notes
 
-- La memoria de vinculaciones está llena: la clave se acepta pero no se guarda,
-  así que la app manda `3a61=01` + clave en cada conexión. Los primeros intentos
-  a veces fallan con "Unlikely Error"; hay que reintentar.
-- Estado `3a12` byte1: nibble bajo = estado; bit 5 (0x20) = programando un
-  tamaño de taza con el botón (visto `00 24 ...` mientras se programaba agua caliente).
-- Al terminar de programar el tamaño la máquina notificó en `3a52`: `c0 00 01 22`.
-- Programar el agua caliente a 100 ml no cambió ninguna característica legible
-  (ver `snapshots/base.json` vs `snapshots/agua100.json`): los tamaños de la
-  perilla no se exponen por lectura directa.
-- Receta `01 10 <len> <id:2> <ingr> <ml:2> ...`: requiere café **y** agua
-  (`01 10 05 ...` sólo con agua → `c1 10 02 34 30`). El campo `id` de 2 bytes
-  sólo acepta `00 00`; cualquier otro valor (1, 2, 3, 4, 99, o el byte alto en 1)
-  → `c1 10 02 36 01` (fuera de rango, parámetro 1). Café 0 ml también da fuera de rango.
-  Conclusión: este comando no sirve para cambiar los tamaños de la perilla.
-- Respuestas en `3a52`: `0x80|cmd`, subcmd, largo, datos. Con error se suma `0x40`;
-  `0x20` = OK, `0x34` = formato inválido, `0x36` = fuera de rango (+ índice del parámetro).
+- The pairing memory is full: the key is accepted but not persisted, so the app
+  sends `3a61=01` + key on every connection. The first attempts sometimes fail
+  with "Unlikely Error" and need a retry.
+- State `3a12` byte1: low nibble = state; bit 5 (0x20) = programming a cup size
+  with the button (seen `00 24 ...` while programming hot water).
+- After programming a size, the machine notified `c0 00 01 22` on `3a52`.
+- Programming hot water to 100 ml from the machine changed no directly readable
+  characteristic: dial sizes are only reachable through `3a14`/`3a24` (below).
+- Recipe `01 10 <len> <id:2> <ingr> <ml:2> ...`: requires coffee **and** water
+  (`01 10 05 ...` with water only → `c1 10 02 34 30`). The 2-byte `id` field
+  only accepts `00 00`; any other value (1, 2, 3, 4, 99, or high byte 1)
+  → `c1 10 02 36 01` (out of range, parameter 1). 0 ml of coffee is also out of
+  range. This command cannot change the dial sizes.
+- Responses on `3a52`: `0x80|cmd`, subcmd, length, data. Errors add `0x40`;
+  `0x20` = OK, `0x34` = invalid format, `0x36` = out of range (+ parameter index).
 
-## Protocolo de la app oficial
+## Official app protocol
 
 SDK `com.nestle.connecteddevices.nespresso`. UUID = `06aaXXXX-f22a-11e3-9daa-0002a5d5c51b`.
 
-| Función | Característica | Formato |
+| Function | Characteristic | Format |
 |---|---|---|
-| Tamaño de taza: elegir bebida | `3a14` (servicio 1940) | `00 kind` — 0 ristretto, 1 espresso, 2 lungo, 3 americano café, 4 americano agua, 5 agua caliente |
-| Tamaño de taza: ml | `3a24` | leer: `ml:2` · escribir: `ml:2 ff ff` (esperar ~600 ms tras elegir) |
-| Apagado automático | `3a44` | `segundos:2 ff` — 540, 1800, 7200, 28800 |
-| Dureza del agua | `3a44` | `ff ff nivel` |
-| Preparar / programar | `3a42` | `03 05 07 04 retardo:4 temp tipo` — retardo en segundos, 0 = ahora |
-| Leer programación | `3a32` | `segundos:4 temp tipo` (todo 0 = nada programado) |
-| Cancelar | `3a42` | `03 06 01 02` |
-| Stock de cápsulas / umbral de aviso | `3a15` / `3a25` | `n:2` |
-| Restablecer de fábrica | `3a42` | `03 07 00` (no usado) |
-| Último error | escribir `00` en `3a13`, leer `3a23` | |
+| Cup size: select drink | `3a14` (service 1940) | `00 kind` — 0 ristretto, 1 espresso, 2 lungo, 3 americano coffee, 4 americano water, 5 hot water |
+| Cup size: ml | `3a24` | read: `ml:2` · write: `ml:2 ff ff` (wait ~600 ms after selecting) |
+| Auto power-off | `3a44` | `seconds:2 ff` — 540, 1800, 7200, 28800 |
+| Water hardness | `3a44` | `ff ff level` |
+| Brew / schedule | `3a42` | `03 05 07 04 delay:4 temp type` — delay in seconds, 0 = now |
+| Read schedule | `3a32` | `seconds:4 temp type` (all zeros = nothing scheduled) |
+| Cancel | `3a42` | `03 06 01 02` |
+| Capsule stock / warning threshold | `3a15` / `3a25` | `n:2` |
+| Factory reset | `3a42` | `03 07 00` (unused) |
+| Last error | write `00` to `3a13`, read `3a23` | |
 
-Límites (ml): ristretto 15–30, espresso 30–70, lungo 70–130, americano café 15–110,
-americano agua 25–300, agua caliente 50–300.
+Limits (ml): ristretto 15–30, espresso 30–70, lungo 70–130, americano coffee 15–110,
+americano water 25–300, hot water 50–300.
 
-Verificado en una Expert C80: lectura de tamaños y escritura (agua caliente 98 → 200).
-Programar sin cápsula responde `24 12` (palanca no ciclada), igual que preparar.
+Verified on an Expert C80: reading sizes and writing them (hot water 98 → 200).
+Scheduling without a capsule answers `24 12` (lever not cycled), same as brewing.

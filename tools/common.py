@@ -1,9 +1,9 @@
-"""Utilidades compartidas por las herramientas de diagnóstico."""
+"""Helpers shared by the diagnostic tools."""
 import os
 
 from bleak import BleakScanner
 
-# Opcional: fijar la dirección con EXPERT_ADDRESS; si no, se busca por nombre.
+# Optional: pin the address with EXPERT_ADDRESS; otherwise it is found by name.
 ADDRESS = os.environ.get("EXPERT_ADDRESS")
 
 

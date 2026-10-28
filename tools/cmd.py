@@ -1,6 +1,6 @@
-"""Envía un comando crudo a 3a42 y muestra la respuesta de 3a52.
+"""Sends a raw command to 3a42 and prints the 3a52 response.
 
-Uso: python tools/cmd.py "01 10 05 00 04 02 00 96"
+Usage: python tools/cmd.py "01 10 05 00 04 02 00 96"
 """
 import asyncio
 import sys
@@ -11,7 +11,7 @@ from bleak import BleakClient
 from common import find_machine
 
 ROOT = Path(__file__).resolve().parent.parent
-KEY = bytes.fromhex((ROOT / "clave-cafetera.txt").read_text().strip())
+KEY = bytes.fromhex((ROOT / "machine-key.txt").read_text().strip())
 
 
 def u(short):
@@ -27,13 +27,13 @@ async def session(cmd):
         await c.write_gatt_char(u("3a41"), KEY, response=True)
         got = asyncio.Queue()
         await c.start_notify(u("3a52"), lambda _s, b: got.put_nowait(b.hex(" ")))
-        await c.start_notify(u("3a12"), lambda _s, b: print("estado", b.hex(" ")))
-        print("estado", (await c.read_gatt_char(u("3a12"))).hex(" "))
-        print("enviando", cmd.hex(" "))
+        await c.start_notify(u("3a12"), lambda _s, b: print("state", b.hex(" ")))
+        print("state", (await c.read_gatt_char(u("3a12"))).hex(" "))
+        print("sending", cmd.hex(" "))
         await c.write_gatt_char(u("3a42"), cmd, response=True)
         try:
             while True:
-                print("respuesta", await asyncio.wait_for(got.get(), 6))
+                print("response", await asyncio.wait_for(got.get(), 6))
         except asyncio.TimeoutError:
             pass
 
@@ -43,7 +43,7 @@ async def main(cmd):
         try:
             return await session(cmd)
         except Exception as e:  # noqa: BLE001
-            print(f"intento {i + 1} falló: {e}")
+            print(f"attempt {i + 1} failed: {e}")
             await asyncio.sleep(3)
 
 

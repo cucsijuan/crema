@@ -5,4 +5,4 @@ dist/
 ios/
 snapshots/
 *.apk
-clave-cafetera.txt
+machine-key.txt

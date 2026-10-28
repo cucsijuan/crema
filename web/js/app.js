@@ -1,38 +1,42 @@
 import { BREW, TEMP, RESPONSE, CUP_SIZES, STANDBY_OPTIONS } from './protocol.js';
 import { WebBluetoothTransport, NativeTransport, DemoTransport } from './transport.js';
 import { Machine } from './machine.js';
+import { t, lang, LANGUAGES, languagePref, setLanguage, applyStatic } from './i18n.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 
 const DRINKS = [
-  { id: 'ristretto', name: 'Ristretto', ml: 25, type: BREW.ristretto, coffee: 25, water: 0 },
-  { id: 'espresso', name: 'Espresso', ml: 40, type: BREW.espresso, coffee: 40, water: 0 },
-  { id: 'lungo', name: 'Lungo', ml: 110, type: BREW.lungo, coffee: 110, water: 0 },
-  { id: 'americano', name: 'Americano', ml: 150, type: BREW.americano, coffee: 40, water: 110 },
-  { id: 'hotWater', name: 'Agua caliente', ml: 200, type: BREW.hotWater, coffee: 0, water: 200 },
+  { id: 'ristretto', type: BREW.ristretto, coffee: 25, water: 0 },
+  { id: 'espresso', type: BREW.espresso, coffee: 40, water: 0 },
+  { id: 'lungo', type: BREW.lungo, coffee: 110, water: 0 },
+  { id: 'americano', type: BREW.americano, coffee: 40, water: 110 },
+  { id: 'hotWater', type: BREW.hotWater, coffee: 0, water: 200 },
 ];
+const drinkName = (d) => t(`drink.${d.id}`);
 
-const TEMPS = [['low', 'Baja'], ['medium', 'Media'], ['high', 'Alta']];
+const TEMPS = ['low', 'medium', 'high'];
+const tempOptions = () => TEMPS.map((k) => [k, t(`temp.${k}`)]);
 
+// state -> [ring style, icon]
 const STATE_UI = {
-  reset: ['Reiniciando', 'spin', 'heat'],
-  heatUp: ['Calentando', 'spin', 'heat'],
-  ready: ['Lista', 'full', 'cup'],
-  descalingReady: ['Lista para descalcificar', 'warn', 'drop'],
-  brewing: ['Preparando', 'spin', 'drop'],
-  menu: ['En el menú', 'idle', 'gear'],
-  descaling: ['Descalcificando', 'spin', 'drop'],
-  steamOut: ['Vapor', 'spin', 'heat'],
-  error: ['Error', 'warn', 'alert'],
-  powerSave: ['En reposo', 'idle', 'moon'],
-  overHeat: ['Sobrecalentada', 'warn', 'alert'],
-  diagnostic: ['Diagnóstico', 'idle', 'gear'],
-  bleSettings: ['Ajustes Bluetooth', 'idle', 'gear'],
-  factoryReset: ['Restableciendo', 'spin', 'gear'],
-  hardnessSettings: ['Ajustando dureza', 'idle', 'gear'],
-  standbySettings: ['Ajustando apagado', 'idle', 'gear'],
-  unknown: ['Desconocido', 'idle', 'alert'],
+  reset: ['spin', 'heat'],
+  heatUp: ['spin', 'heat'],
+  ready: ['full', 'cup'],
+  descalingReady: ['warn', 'drop'],
+  brewing: ['spin', 'drop'],
+  menu: ['idle', 'gear'],
+  descaling: ['spin', 'drop'],
+  steamOut: ['spin', 'heat'],
+  error: ['warn', 'alert'],
+  powerSave: ['idle', 'moon'],
+  overHeat: ['warn', 'alert'],
+  diagnostic: ['idle', 'gear'],
+  bleSettings: ['idle', 'gear'],
+  factoryReset: ['spin', 'gear'],
+  hardnessSettings: ['idle', 'gear'],
+  standbySettings: ['idle', 'gear'],
+  unknown: ['idle', 'alert'],
 };
 
 const ICONS = {
@@ -45,22 +49,6 @@ const ICONS = {
 };
 const icon = (name) =>
   `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
-
-const RESPONSE_TEXT = {
-  [RESPONSE.ok]: null,
-  [RESPONSE.outOfRange]: 'Valor fuera de rango para la máquina',
-  [RESPONSE.invalidState]: 'La máquina no está lista. Revisá el agua y que esté encendida',
-  [RESPONSE.trayFull]: 'Vaciá el contenedor de cápsulas usadas',
-  [RESPONSE.obstacle]: 'Hay algo trabando el mecanismo',
-  [RESPONSE.descaleOn]: 'Está en modo descalcificación',
-  [RESPONSE.busy]: 'Todavía está terminando la acción anterior',
-  [RESPONSE.notAbortable]: 'Esta acción no se puede detener',
-  [RESPONSE.leverOpen]: 'Cerrá la palanca',
-  [RESPONSE.pumpRunning]: 'La bomba está en marcha, esperá un momento',
-  [RESPONSE.motorRunning]: 'El motor está en marcha, esperá un momento',
-  [RESPONSE.leverNotCycled]: 'Abrí y cerrá la palanca con una cápsula nueva',
-  [RESPONSE.unknown]: 'La máquina no respondió',
-};
 
 const RECIPES_KEY = 'expert.recipes';
 const PREFS_KEY = 'expert.prefs';
@@ -81,7 +69,7 @@ function store(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    /* sin almacenamiento */
+    /* storage unavailable */
   }
 }
 function loadRecipes() {
@@ -92,20 +80,12 @@ function loadRecipes() {
   }
 }
 
-// ---------- utilidades de UI ----------
+const formatTime = (ms) => new Date(ms).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+
+// ---------- UI helpers ----------
 
 function show(screen) {
   $$('.screen').forEach((s) => s.classList.toggle('active', s.id === screen));
-}
-
-let toastTimer;
-function toast(text, bad = false) {
-  const t = $('#toast');
-  t.textContent = text;
-  t.classList.toggle('bad', bad);
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
 }
 
 function openSheet(id) {
@@ -115,6 +95,16 @@ function openSheet(id) {
 function closeSheets() {
   $$('.sheet.open').forEach((x) => x.classList.remove('open'));
   $('#sheet-backdrop').classList.remove('open');
+}
+
+let toastTimer;
+function toast(text, bad = false) {
+  const el = $('#toast');
+  el.textContent = text;
+  el.classList.toggle('bad', bad);
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
 
 function busy(text) {
@@ -136,8 +126,9 @@ async function run(text, fn) {
 
 function friendlyError(e) {
   const m = String(e?.message || e);
-  if (/Authoriz|authenticat/i.test(m)) return 'La cafetera rechazó la clave';
-  if (/disconnect|not connected|GATT Server/i.test(m)) return 'Se perdió la conexión con la cafetera';
+  if (/Authoriz|authenticat/i.test(m)) return t('err.auth');
+  if (/disconnect|not connected|GATT Server/i.test(m)) return t('err.lost');
+  if (/16 hex/i.test(m)) return t('err.badKey');
   return m;
 }
 
@@ -167,12 +158,12 @@ function cupSvg(coffee, water) {
   </svg>`;
 }
 
-// ---------- pantallas ----------
+// ---------- screens ----------
 
-// ml reales de la perilla si ya se leyeron de la máquina.
+// Real dial volumes once they have been read from the machine.
 function drinkVolumes(d) {
   const s = machine?.cupSizes ?? {};
-  if (d.id === 'americano' && s.americanoCoffee) return [s.americanoCoffee, s.americanoWater];
+  if (d.id === 'americano' && s.americanoCoffee && s.americanoWater) return [s.americanoCoffee, s.americanoWater];
   if (d.id === 'hotWater' && s.hotWater) return [0, s.hotWater];
   if (s[d.id]) return [s[d.id], 0];
   return [d.coffee, d.water];
@@ -186,7 +177,7 @@ function renderDrinks() {
     const b = document.createElement('button');
     b.className = 'drink';
     b.classList.toggle('active', d.id === prefs.drink);
-    b.innerHTML = `${cupSvg(coffee, water)}<b>${d.name}</b><small>${coffee + water} ml</small>`;
+    b.innerHTML = `${cupSvg(coffee, water)}<b>${drinkName(d)}</b><small>${coffee + water} ml</small>`;
     b.onclick = () => {
       prefs.drink = d.id;
       store(PREFS_KEY, prefs);
@@ -196,74 +187,97 @@ function renderDrinks() {
   }
 }
 
+function renderTemps() {
+  segmented($('#temp-brew'), tempOptions(), prefs.temp, (v) => {
+    prefs.temp = v;
+    store(PREFS_KEY, prefs);
+  });
+  segmented($('#temp-recipe'), tempOptions(), prefs.recipeTemp, (v) => {
+    prefs.recipeTemp = v;
+    store(PREFS_KEY, prefs);
+  });
+}
+
+function renderLanguage() {
+  const options = [['auto', t('lang.auto')], ...LANGUAGES];
+  const pref = languagePref();
+  $('#sum-lang').textContent = options.find(([k]) => k === pref)[1];
+  segmented($('#language'), options, pref, (v) => {
+    setLanguage(v);
+    renderAll();
+  });
+}
+
 function renderStatus() {
   if (!machine?.status) return;
   const s = machine.status;
-  const [label, ring, ic] = s.programmingCup
-    ? ['Programando tamaño', 'spin', 'drop']
-    : STATE_UI[s.state] ?? STATE_UI.unknown;
+  const key = s.programmingCup ? 'programmingCup' : STATE_UI[s.state] ? s.state : 'unknown';
+  const [ring, ic] = s.programmingCup ? ['spin', 'drop'] : STATE_UI[key];
+  const label = t(`state.${key}`);
   $('#status-label').textContent = label;
   $('#status-icon').innerHTML = icon(ic);
   $('#status-ring').className = `status-ring ${ring}`;
 
   const sub = [];
-  if (machine.caps != null) sub.push(`${machine.caps} cápsulas`);
-  if (s.state === 'powerSave') sub.push('se enciende al preparar');
+  if (machine.caps != null) sub.push(t('caps.count', { n: machine.caps }));
+  if (s.state === 'powerSave') sub.push(t('status.wakes'));
   $('#status-sub').textContent = sub.join(' · ');
 
   const alerts = [];
-  if (s.waterEmpty) alerts.push(['Sin agua', true]);
-  if (s.descaleNeeded) alerts.push(['Descalcificar', false]);
-  if (s.capsuleJammed) alerts.push(['Cápsula trabada', true]);
-  if (s.trayIssue) alerts.push(['Revisá la bandeja', false]);
-  if (machine.lever && !machine.lever.leverClosed) alerts.push(['Palanca abierta', false]);
+  if (s.waterEmpty) alerts.push([t('alert.noWater'), true]);
+  if (s.descaleNeeded) alerts.push([t('alert.descale'), false]);
+  if (s.capsuleJammed) alerts.push([t('alert.jammed'), true]);
+  if (s.trayIssue) alerts.push([t('alert.tray'), false]);
+  if (machine.lever && !machine.lever.leverClosed) alerts.push([t('alert.leverOpen'), false]);
   if (machine.caps != null && machine.capsThreshold != null && machine.caps <= machine.capsThreshold) {
-    alerts.push([`Quedan ${machine.caps} cápsulas`, false]);
+    alerts.push([t('caps.low', { n: machine.caps }), false]);
   }
-  $('#alerts').innerHTML = alerts.map(([t, bad]) => `<span class="chip ${bad ? 'bad' : ''}">${t}</span>`).join('');
+  $('#alerts').innerHTML = alerts.map(([text, bad]) => `<span class="chip ${bad ? 'bad' : ''}">${text}</span>`).join('');
 
   const brewing = s.state === 'brewing';
   $('#btn-brew').classList.toggle('hidden', brewing);
   $('#btn-abort').classList.toggle('hidden', !brewing);
 
-  if (lastState === 'brewing' && s.state !== 'brewing') toast('¡Listo! Que lo disfrutes');
+  if (lastState === 'brewing' && s.state !== 'brewing') toast(t('brew.done'));
   lastState = s.state;
 
   const p = machine.programmed;
   $('#scheduled').classList.toggle('hidden', !p);
   if (p) {
-    const drink = DRINKS.find((d) => d.type === p.type)?.name ?? 'Receta';
-    const at = new Date(p.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-    $('#scheduled-text').textContent = `${drink} a las ${at}`;
+    const d = DRINKS.find((x) => x.type === p.type);
+    $('#scheduled-text').textContent = t('brew.scheduledAt', {
+      drink: d ? drinkName(d) : t('drink.recipe'),
+      time: formatTime(p.at),
+    });
   }
 
-  // Máquina
-  $('#caps-label').textContent = machine.caps == null ? 'Sin configurar' : `${machine.caps} en stock`;
+  // Machine tab
+  $('#caps-label').textContent = machine.caps == null ? t('caps.notSet') : t('caps.inStock', { n: machine.caps });
   $('#sum-standby').textContent = STANDBY_OPTIONS.find(([sec]) => sec === machine.standby)?.[1] ?? '—';
-  $('#sum-hardness').textContent = machine.hardness == null ? '—' : `Nivel ${machine.hardness}`;
-  $('#sum-maint').textContent = s.descaleNeeded ? 'Descalcificar' : 'Al día';
+  $('#sum-hardness').textContent = machine.hardness == null ? '—' : t('hardness.level', { n: machine.hardness });
+  $('#sum-maint').textContent = s.descaleNeeded ? t('maint.descale') : t('maint.upToDate');
   if (document.activeElement !== $('#caps-input')) $('#caps-input').value = machine.caps ?? 0;
   if (document.activeElement !== $('#caps-threshold')) $('#caps-threshold').value = machine.capsThreshold ?? 10;
   segmented($('#standby'), STANDBY_OPTIONS, machine.standby, (sec) =>
-    run('Guardando…', async () => {
+    run(t('busy.saving'), async () => {
       await machine.setStandby(sec);
-      toast(`Apagado automático: ${STANDBY_OPTIONS.find(([s]) => s === sec)[1]}`);
+      toast(t('standby.saved', { value: STANDBY_OPTIONS.find(([x]) => x === sec)[1] }));
     }),
   );
   segmented($('#hardness'), [0, 1, 2, 3, 4].map((n) => [n, String(n)]), machine.hardness, (lvl) =>
-    run('Guardando…', async () => {
+    run(t('busy.saving'), async () => {
       await machine.setHardness(lvl);
-      toast(`Dureza del agua: ${lvl}`);
+      toast(t('hardness.saved', { n: lvl }));
     }),
   );
   $('#maintenance').innerHTML = kv([
-    ['Estado', label],
-    ['Agua', s.waterEmpty ? 'Vacía' : 'OK'],
-    ['Descalcificación', s.descaleNeeded ? 'Necesaria' : 'Al día'],
-    ['Contador', s.descaleCounter ?? '—'],
-    ['Palanca', machine.lever ? (machine.lever.leverClosed ? 'Cerrada' : 'Abierta') : '—'],
+    [t('maint.state'), label],
+    [t('maint.water'), s.waterEmpty ? t('maint.empty') : t('maint.ok')],
+    [t('maint.descaling'), s.descaleNeeded ? t('maint.needed') : t('maint.upToDate')],
+    [t('maint.counter'), s.descaleCounter ?? '—'],
+    [t('maint.lever'), machine.lever ? (machine.lever.leverClosed ? t('maint.closed') : t('maint.open')) : '—'],
   ]);
-  $('#raw').textContent = `estado ${s.raw}`;
+  $('#raw').textContent = `${t('info.rawState')} ${s.raw}`;
 }
 
 function kv(rows) {
@@ -271,15 +285,16 @@ function kv(rows) {
 }
 
 function renderInfo() {
+  if (!machine?.info) return;
   $('#machine-name').textContent = demo ? 'Expert (demo)' : machine.device.name.replace(/_.*/, '');
   const i = machine.info;
   $('#info').innerHTML = kv([
-    ['Nombre', machine.device.name],
-    ['Serie', machine.serial || '—'],
-    ['Firmware', i.firmware],
-    ['Bluetooth', i.connectivity],
-    ['Hardware', i.hardware],
-    ['Dirección', i.address],
+    [t('info.name'), machine.device.name],
+    [t('info.serial'), machine.serial || '—'],
+    [t('info.firmware'), i.firmware],
+    [t('info.bluetooth'), i.connectivity],
+    [t('info.hardware'), i.hardware],
+    [t('info.address'), i.address],
   ]);
   $('#key-view').textContent = machine.key ?? '—';
   $('#sum-info').textContent = `v${i.firmware}`;
@@ -293,9 +308,10 @@ function renderCupSizes() {
   if (!CUP_SIZES.every((c) => sizes[c.id] != null)) return;
   el.innerHTML = '';
   for (const c of CUP_SIZES) {
+    const name = t(`cup.${c.id}`);
     const row = document.createElement('label');
     row.className = 'cup-row';
-    row.innerHTML = `<div class="row"><span>${c.name} <small>· fábrica ${c.def}</small></span><b><span class="v">${sizes[c.id]}</span> ml</b></div>
+    row.innerHTML = `<div class="row"><span>${name} <small>· ${t('cups.factory', { ml: c.def })}</small></span><b><span class="v">${sizes[c.id]}</span> ml</b></div>
       <input type="range" min="${c.min}" max="${c.max}" step="1" value="${sizes[c.id]}">`;
     const input = row.querySelector('input');
     input.oninput = () => (row.querySelector('.v').textContent = input.value);
@@ -303,7 +319,7 @@ function renderCupSizes() {
       row.classList.add('saving');
       try {
         const saved = await machine.setCupSize(c.id, +input.value);
-        toast(`${c.name}: ${saved} ml`);
+        toast(`${name}: ${saved} ml`);
       } catch (e) {
         toast(friendlyError(e), true);
       }
@@ -337,16 +353,16 @@ function renderRecipes() {
   const list = loadRecipes();
   const el = $('#recipe-list');
   if (!list.length) {
-    el.innerHTML = '<li class="empty">Todavía no guardaste recetas</li>';
+    el.innerHTML = `<li class="empty">${t('recipe.empty')}</li>`;
     return;
   }
   el.innerHTML = '';
   list.forEach((r, idx) => {
     const li = document.createElement('li');
-    const temp = TEMPS.find(([k]) => k === r.temp)?.[1] ?? 'Media';
-    li.innerHTML = `<div class="meta"><b></b><small>${r.coffee} ml café · ${r.water} ml agua · ${temp}</small></div>
-      <button class="btn small primary">Preparar</button>
-      <button class="icon-btn" aria-label="Borrar"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>`;
+    const temp = t(`temp.${TEMPS.includes(r.temp) ? r.temp : 'medium'}`);
+    li.innerHTML = `<div class="meta"><b></b><small>${t('recipe.summary', { coffee: r.coffee, water: r.water, temp })}</small></div>
+      <button class="btn small primary">${t('brew.brew')}</button>
+      <button class="icon-btn" aria-label="${t('recipe.delete')}"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>`;
     li.querySelector('b').textContent = r.name;
     li.querySelector('.btn').onclick = () => brewRecipe(r.coffee, r.water, r.temp);
     li.querySelector('.icon-btn').onclick = () => {
@@ -359,21 +375,41 @@ function renderRecipes() {
   });
 }
 
-// ---------- acciones ----------
+function renderConnectHint() {
+  const supported = NativeTransport.supported() || WebBluetoothTransport.supported();
+  $('#btn-connect').disabled = !supported;
+  $('#connect-hint').textContent = supported ? t('connect.hint') : t('connect.unsupported');
+}
+
+function renderAll() {
+  applyStatic();
+  renderConnectHint();
+  renderLanguage();
+  renderTemps();
+  renderDrinks();
+  renderRecipes();
+  renderInfo();
+  renderStatus();
+  renderCupSizes();
+}
+
+// ---------- actions ----------
 
 function report(r, okText) {
   if (r === RESPONSE.ok) toast(okText);
-  else toast(RESPONSE_TEXT[r] ?? 'Error', true);
+  else toast(t(`response.${r}`), true);
 }
 
 async function brewSelected() {
   const d = DRINKS.find((x) => x.id === prefs.drink);
-  await run(null, async () => report(await machine.brew(d.type, TEMP[prefs.temp]), `Preparando ${d.name.toLowerCase()}…`));
+  await run(null, async () =>
+    report(await machine.brew(d.type, TEMP[prefs.temp]), t('brew.brewing', { drink: drinkName(d).toLowerCase() })),
+  );
 }
 
 async function brewRecipe(coffee, water, temp) {
-  if (coffee + water <= 0) return toast('Elegí alguna cantidad', true);
-  await run(null, async () => report(await machine.brewRecipe(coffee, water, TEMP[temp]), 'Preparando tu receta…'));
+  if (coffee + water <= 0) return toast(t('recipe.pickAmount'), true);
+  await run(null, async () => report(await machine.brewRecipe(coffee, water, TEMP[temp]), t('recipe.brewing')));
 }
 
 async function connect(useDemo) {
@@ -387,7 +423,7 @@ async function connect(useDemo) {
   machine.addEventListener('needsPairing', () => show('screen-pair'));
   machine.addEventListener('authFailed', () => {
     show('screen-pair');
-    toast('La clave guardada no funcionó. Vinculá de nuevo o usá otra clave', true);
+    toast(t('toast.keyFailed'), true);
   });
   machine.addEventListener('ready', () => {
     $('#conn-pill').classList.remove('off');
@@ -399,48 +435,34 @@ async function connect(useDemo) {
     closeSheets();
     show('screen-connect');
     $('#conn-pill').classList.add('off');
-    toast('Cafetera desconectada', true);
+    toast(t('toast.disconnected'), true);
   });
-  await run('Conectando…', () => machine.connect());
+  await run(t('busy.connecting'), () => machine.connect());
 }
 
 function bind() {
-  const supported = NativeTransport.supported() || WebBluetoothTransport.supported();
-  $('#btn-connect').disabled = !supported;
-  $('#connect-hint').textContent = supported
-    ? 'Encendé la cafetera y acercate a ella.'
-    : 'Este navegador no tiene Bluetooth. En la PC usá Chrome o Edge; en iPhone, la app Bluefy.';
   $('#btn-connect').onclick = () => connect(false);
   $('#btn-demo').onclick = () => connect(true);
 
   $('#btn-pair-new').onclick = () =>
-    run('Vinculando…', async () => {
+    run(t('busy.pairing'), async () => {
       await machine.pair();
-      toast('Cafetera vinculada');
+      toast(t('toast.paired'));
     });
-  $('#btn-pair-key').onclick = () => run('Probando clave…', () => machine.useKey($('#input-key').value));
+  $('#btn-pair-key').onclick = () => run(t('busy.tryingKey'), () => machine.useKey($('#input-key').value));
   $$('[data-action=disconnect]').forEach((b) => (b.onclick = () => machine?.disconnect()));
 
   $$('.tabbtn').forEach(
     (b) =>
       (b.onclick = () => {
         $$('.tabbtn').forEach((x) => x.classList.toggle('active', x === b));
-        $$('.tab').forEach((t) => t.classList.toggle('active', t.id === b.dataset.tab));
+        $$('.tab').forEach((x) => x.classList.toggle('active', x.id === b.dataset.tab));
       }),
   );
 
-  segmented($('#temp-brew'), TEMPS, prefs.temp, (v) => {
-    prefs.temp = v;
-    store(PREFS_KEY, prefs);
-  });
-  segmented($('#temp-recipe'), TEMPS, prefs.recipeTemp, (v) => {
-    prefs.recipeTemp = v;
-    store(PREFS_KEY, prefs);
-  });
-
   $('#btn-brew').onclick = brewSelected;
-  $('#btn-abort').onclick = () => run(null, async () => report(await machine.abort(), 'Detenido'));
-  $('#btn-refresh').onclick = () => run('Actualizando…', () => machine.refresh());
+  $('#btn-abort').onclick = () => run(null, async () => report(await machine.abort(), t('brew.stopped')));
+  $('#btn-refresh').onclick = () => run(t('busy.refreshing'), () => machine.refresh());
 
   $('#coffee-ml').value = prefs.coffee;
   $('#water-ml').value = prefs.water;
@@ -448,13 +470,13 @@ function bind() {
   $('#water-ml').oninput = renderRecipeBuilder;
   $('#btn-brew-recipe').onclick = () => brewRecipe(+$('#coffee-ml').value, +$('#water-ml').value, prefs.recipeTemp);
   $('#btn-save-recipe').onclick = () => {
-    const name = prompt('Nombre de la receta', 'Mi café');
+    const name = prompt(t('recipe.namePrompt'), t('recipe.defaultName'));
     if (!name) return;
     const list = loadRecipes();
     list.push({ name, coffee: +$('#coffee-ml').value, water: +$('#water-ml').value, temp: prefs.recipeTemp });
     store(RECIPES_KEY, list);
     renderRecipes();
-    toast('Receta guardada');
+    toast(t('recipe.saved'));
   };
 
   $$('[data-caps]').forEach(
@@ -465,18 +487,18 @@ function bind() {
       }),
   );
   $('#btn-caps').onclick = () =>
-    run('Guardando…', async () => {
+    run(t('busy.saving'), async () => {
       const clamp = (v) => Math.max(0, Math.min(999, +v || 0));
       await machine.setCaps(clamp($('#caps-input').value), clamp($('#caps-threshold').value));
-      toast('Cápsulas guardadas');
+      toast(t('caps.saved'));
       closeSheets();
     });
 
   $('#btn-cup-defaults').onclick = () => {
-    if (!confirm('¿Volver todos los tamaños a los de fábrica?')) return;
-    run('Restaurando…', async () => {
+    if (!confirm(t('cups.confirm'))) return;
+    run(t('cups.restoring'), async () => {
       for (const c of CUP_SIZES) await machine.setCupSize(c.id, c.def);
-      toast('Tamaños de fábrica restaurados');
+      toast(t('cups.restored'));
     });
   };
 
@@ -491,34 +513,32 @@ function bind() {
     when.setHours(h, m, 0, 0);
     if (when <= Date.now()) when.setDate(when.getDate() + 1);
     const d = DRINKS.find((x) => x.id === prefs.drink);
-    run('Programando…', async () => {
+    run(t('schedule.busy'), async () => {
       const r = await machine.schedule(d.type, TEMP[prefs.temp], when.getTime());
-      const at = when.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-      report(r, `${d.name} programado para las ${at}`);
+      report(r, t('schedule.ok', { drink: drinkName(d), time: formatTime(when) }));
       if (r === RESPONSE.ok) closeSheets();
     });
   };
   $('#btn-cancel-schedule').onclick = () =>
-    run('Cancelando…', async () => report(await machine.abort(), 'Programación cancelada'));
+    run(t('schedule.canceling'), async () => report(await machine.abort(), t('schedule.canceled')));
 
   $('#btn-copy-key').onclick = async () => {
     try {
       await navigator.clipboard.writeText(machine.key);
-      toast('Clave copiada');
+      toast(t('key.copied'));
     } catch {
-      toast('No se pudo copiar; seleccionala a mano', true);
+      toast(t('key.copyFailed'), true);
     }
   };
 
   $('#sim-water').onclick = () => machine.t.toggleWater();
   $('#sim-lever').onclick = () => {
     machine.t.cycleLever();
-    toast('Palanca lista');
+    toast(t('sim.leverReady'));
   };
 
-  renderDrinks();
+  renderAll();
   renderRecipeBuilder();
-  renderRecipes();
 }
 
 bind();

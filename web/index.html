@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -14,7 +14,7 @@
 </head>
 <body>
   <div class="app">
-    <!-- Conexión -->
+    <!-- Connect -->
     <section id="screen-connect" class="screen active">
       <div class="hero">
         <svg class="hero-cup" viewBox="0 0 120 120" aria-hidden="true">
@@ -25,48 +25,48 @@
           <path class="saucer" d="M14 106h92"/>
         </svg>
         <h1>Crema</h1>
-        <p class="lede">Controlá tu Expert desde el teléfono o la compu. Sin la app oficial.</p>
+        <p class="lede" data-i18n="connect.lede"></p>
       </div>
       <div class="connect-actions">
-        <button id="btn-connect" class="btn primary big">Conectar cafetera</button>
-        <button id="btn-demo" class="btn ghost">Probar en modo demo</button>
+        <button id="btn-connect" class="btn primary big" data-i18n="connect.button"></button>
+        <button id="btn-demo" class="btn ghost" data-i18n="connect.demo"></button>
         <p id="connect-hint" class="hint"></p>
       </div>
     </section>
 
-    <!-- Vinculación -->
+    <!-- Pairing -->
     <section id="screen-pair" class="screen">
-      <header class="bar"><h2>Vincular</h2></header>
+      <header class="bar"><h2 data-i18n="pair.title"></h2></header>
       <div class="pad stack">
         <div class="card">
-          <h3>Primera vez</h3>
-          <p class="muted">Crea una clave nueva y la guarda en la cafetera. Hacelo una sola vez: la máquina tiene lugar para unas 25 vinculaciones en total.</p>
-          <button id="btn-pair-new" class="btn primary">Vincular esta cafetera</button>
+          <h3 data-i18n="pair.newTitle"></h3>
+          <p class="muted" data-i18n="pair.newText"></p>
+          <button id="btn-pair-new" class="btn primary" data-i18n="pair.newButton"></button>
         </div>
         <div class="card">
-          <h3>Ya tengo una clave</h3>
-          <p class="muted">Usá la misma clave en todos tus dispositivos (la encontrás en Máquina → Clave en el otro dispositivo).</p>
-          <input id="input-key" class="field mono" placeholder="16 caracteres, ej. 0a1b2c3d4e5f6071" maxlength="23" autocomplete="off" spellcheck="false">
-          <button id="btn-pair-key" class="btn">Usar clave</button>
+          <h3 data-i18n="pair.keyTitle"></h3>
+          <p class="muted" data-i18n="pair.keyText"></p>
+          <input id="input-key" class="field mono" data-i18n-placeholder="pair.keyPlaceholder" maxlength="23" autocomplete="off" spellcheck="false">
+          <button id="btn-pair-key" class="btn" data-i18n="pair.keyButton"></button>
         </div>
-        <button class="btn ghost" data-action="disconnect">Cancelar</button>
+        <button class="btn ghost" data-action="disconnect" data-i18n="common.cancel"></button>
       </div>
     </section>
 
-    <!-- Principal -->
+    <!-- Main -->
     <section id="screen-main" class="screen">
       <header class="bar">
         <div>
           <h2 id="machine-name">Expert</h2>
-          <span id="conn-pill" class="pill"><i></i><span>Conectada</span></span>
+          <span id="conn-pill" class="pill"><i></i><span data-i18n="main.connected"></span></span>
         </div>
-        <button class="icon-btn" id="btn-refresh" aria-label="Actualizar">
+        <button class="icon-btn" id="btn-refresh" data-i18n-aria="main.refresh">
           <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>
         </button>
       </header>
 
       <div class="tabs-body">
-        <!-- Café -->
+        <!-- Coffee -->
         <div id="tab-brew" class="tab active">
           <div class="status-card" id="status-card">
             <div class="status-ring" id="status-ring">
@@ -81,8 +81,8 @@
           <div class="alerts" id="alerts"></div>
           <div class="scheduled hidden" id="scheduled">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
-            <div class="grow"><b>Programado</b> <span class="muted" id="scheduled-text"></span></div>
-            <button id="btn-cancel-schedule" class="btn small">Cancelar</button>
+            <div class="grow"><b data-i18n="brew.scheduled"></b> <span class="muted" id="scheduled-text"></span></div>
+            <button id="btn-cancel-schedule" class="btn small" data-i18n="common.cancel"></button>
           </div>
 
           <div class="drinks" id="drinks"></div>
@@ -90,15 +90,15 @@
           <div class="segmented" id="temp-brew" data-temp></div>
 
           <div class="brew-bar">
-            <button id="btn-brew" class="btn primary big">Preparar</button>
-            <button id="btn-abort" class="btn danger big hidden">Detener</button>
-            <button id="btn-schedule-toggle" class="btn square" aria-label="Programar para más tarde">
+            <button id="btn-brew" class="btn primary big" data-i18n="brew.brew"></button>
+            <button id="btn-abort" class="btn danger big hidden" data-i18n="brew.stop"></button>
+            <button id="btn-schedule-toggle" class="btn square" data-i18n-aria="brew.later">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
             </button>
           </div>
         </div>
 
-        <!-- Recetas -->
+        <!-- Recipes -->
         <div id="tab-recipes" class="tab">
           <div class="card recipe-builder">
             <div class="recipe-top">
@@ -115,126 +115,126 @@
               </div>
               <div class="recipe-sliders">
                 <label class="slider-row">
-                  <span>Café <b><span id="coffee-val">40</span> ml</b></span>
+                  <span><span data-i18n="recipe.coffee"></span> <b><span id="coffee-val">40</span> ml</b></span>
                   <input type="range" id="coffee-ml" min="5" max="150" step="5" value="40">
                 </label>
                 <label class="slider-row">
-                  <span>Agua <b><span id="water-val">0</span> ml</b></span>
+                  <span><span data-i18n="recipe.water"></span> <b><span id="water-val">0</span> ml</b></span>
                   <input type="range" id="water-ml" min="0" max="300" step="5" value="0">
                 </label>
               </div>
             </div>
             <div class="segmented" id="temp-recipe" data-temp></div>
             <div class="row">
-              <button id="btn-brew-recipe" class="btn primary grow">Preparar</button>
-              <button id="btn-save-recipe" class="btn">Guardar</button>
+              <button id="btn-brew-recipe" class="btn primary grow" data-i18n="brew.brew"></button>
+              <button id="btn-save-recipe" class="btn" data-i18n="common.save"></button>
             </div>
           </div>
-          <h3 class="section">Mis recetas</h3>
+          <h3 class="section" data-i18n="recipe.mine"></h3>
           <ul class="recipe-list" id="recipe-list"></ul>
         </div>
 
-        <!-- Máquina -->
+        <!-- Machine -->
         <div id="tab-machine" class="tab">
           <div class="menu">
             <button class="menu-row" data-sheet="sheet-cups">
               <span class="mi"><svg viewBox="0 0 24 24"><path d="M5 9h12v4a6 6 0 0 1-6 6h0a6 6 0 0 1-6-6zM17 10h1.5a2.5 2.5 0 0 1 0 5H17"/></svg></span>
-              <span class="grow">Tamaños de taza</span>
-              <span class="muted" id="sum-cups">—</span>
+              <span class="grow" data-i18n="menu.cups"></span>
+              <span class="muted" id="sum-cups"></span>
               <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
             </button>
             <button class="menu-row" data-sheet="sheet-caps">
               <span class="mi"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M9 9h6M9 13h6"/></svg></span>
-              <span class="grow">Cápsulas</span>
-              <span class="muted" id="caps-label">—</span>
+              <span class="grow" data-i18n="menu.caps"></span>
+              <span class="muted" id="caps-label"></span>
               <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
             </button>
             <button class="menu-row" data-sheet="sheet-standby">
               <span class="mi"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></span>
-              <span class="grow">Apagado automático</span>
-              <span class="muted" id="sum-standby">—</span>
+              <span class="grow" data-i18n="menu.standby"></span>
+              <span class="muted" id="sum-standby"></span>
               <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
             </button>
             <button class="menu-row" data-sheet="sheet-hardness">
               <span class="mi"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></span>
-              <span class="grow">Dureza del agua</span>
-              <span class="muted" id="sum-hardness">—</span>
+              <span class="grow" data-i18n="menu.hardness"></span>
+              <span class="muted" id="sum-hardness"></span>
               <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
             </button>
           </div>
           <div class="menu">
             <button class="menu-row" data-sheet="sheet-maint">
               <span class="mi"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg></span>
-              <span class="grow">Mantenimiento</span>
-              <span class="muted" id="sum-maint">—</span>
+              <span class="grow" data-i18n="menu.maint"></span>
+              <span class="muted" id="sum-maint"></span>
               <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
             </button>
             <button class="menu-row" data-sheet="sheet-info">
               <span class="mi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg></span>
-              <span class="grow">Información</span>
-              <span class="muted" id="sum-info">—</span>
+              <span class="grow" data-i18n="menu.info"></span>
+              <span class="muted" id="sum-info"></span>
               <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
             </button>
             <button class="menu-row" data-sheet="sheet-key">
               <span class="mi"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/></svg></span>
-              <span class="grow">Clave</span>
-              <span class="muted" id="sum-key">—</span>
+              <span class="grow" data-i18n="menu.key"></span>
+              <span class="muted" id="sum-key"></span>
+              <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <button class="menu-row" data-sheet="sheet-lang">
+              <span class="mi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg></span>
+              <span class="grow" data-i18n="menu.language"></span>
+              <span class="muted" id="sum-lang"></span>
               <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
             </button>
             <button class="menu-row" data-sheet="sheet-sim" id="sim-row" hidden>
               <span class="mi"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M8 10v4M6 12h4M15 11v.01M18 13v.01"/></svg></span>
-              <span class="grow">Simulador</span>
+              <span class="grow" data-i18n="menu.sim"></span>
               <span class="muted" id="sum-sim"></span>
               <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
             </button>
           </div>
-          <button class="btn ghost" data-action="disconnect">Desconectar</button>
+          <button class="btn ghost" data-action="disconnect" data-i18n="main.disconnect"></button>
         </div>
       </div>
 
       <nav class="tabbar">
         <button class="tabbtn active" data-tab="tab-brew">
           <svg viewBox="0 0 24 24"><path d="M4 9h13v4a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6zM17 10h1.5a2.5 2.5 0 0 1 0 5H17M8 3v3M12 3v3"/></svg>
-          <span>Café</span>
+          <span data-i18n="tab.brew"></span>
         </button>
         <button class="tabbtn" data-tab="tab-recipes">
           <svg viewBox="0 0 24 24"><path d="M6 3h12l-1.5 17a1.5 1.5 0 0 1-1.5 1.4H9a1.5 1.5 0 0 1-1.5-1.4zM6.6 10h10.8"/></svg>
-          <span>Recetas</span>
+          <span data-i18n="tab.recipes"></span>
         </button>
         <button class="tabbtn" data-tab="tab-machine">
           <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-          <span>Máquina</span>
+          <span data-i18n="tab.machine"></span>
         </button>
       </nav>
     </section>
 
-    <!-- Hojas que suben desde abajo -->
+    <!-- Bottom sheets -->
     <div id="sheet-backdrop" class="sheet-backdrop"></div>
 
     <section class="sheet" id="sheet-schedule">
-      <header class="sheet-head"><h3>Programar</h3><button class="btn small" data-close>Cerrar</button></header>
-      <p class="muted small">Dejá la cápsula puesta, la palanca cerrada y la taza en su lugar. La cafetera la prepara sola a esa hora, aunque cierres la app.</p>
+      <header class="sheet-head"><h3 data-i18n="schedule.title"></h3><button class="btn small" data-close data-i18n="common.close"></button></header>
+      <p class="muted small" data-i18n="schedule.text"></p>
       <div class="row">
         <input type="time" id="schedule-time" class="field grow" value="07:30">
-        <button id="btn-schedule" class="btn primary">Programar</button>
+        <button id="btn-schedule" class="btn primary" data-i18n="schedule.button"></button>
       </div>
     </section>
 
     <section class="sheet" id="sheet-cups">
-      <header class="sheet-head">
-        <h3>Tamaños de taza</h3>
-        <div class="row">
-          <button id="btn-cup-defaults" class="btn small ghost">De fábrica</button>
-          <button class="btn small" data-close>Listo</button>
-        </div>
-      </header>
-      <p class="muted small">Lo que sirve cada posición de la perilla. Se guarda en la cafetera.</p>
-      <div class="cup-sizes" id="cup-sizes"><p class="muted small">Leyendo…</p></div>
+      <header class="sheet-head"><h3 data-i18n="menu.cups"></h3><div class="row"><button id="btn-cup-defaults" class="btn small ghost" data-i18n="cups.defaults"></button><button class="btn small" data-close data-i18n="common.done"></button></div></header>
+      <p class="muted small" data-i18n="cups.text"></p>
+      <div class="cup-sizes" id="cup-sizes"><p class="muted small" data-i18n="cups.reading"></p></div>
     </section>
 
     <section class="sheet" id="sheet-caps">
-      <header class="sheet-head"><h3>Cápsulas</h3><button class="btn small" data-close>Cerrar</button></header>
-      <p class="muted small">Cargá cuántas cápsulas tenés y la máquina las descuenta sola.</p>
+      <header class="sheet-head"><h3 data-i18n="menu.caps"></h3><button class="btn small" data-close data-i18n="common.close"></button></header>
+      <p class="muted small" data-i18n="caps.text"></p>
       <div class="stepper">
         <button class="icon-btn" data-caps="-10">−10</button>
         <button class="icon-btn" data-caps="-1">−1</button>
@@ -243,55 +243,61 @@
         <button class="icon-btn" data-caps="10">+10</button>
       </div>
       <label class="row between small muted">
-        <span>Avisar cuando queden</span>
+        <span data-i18n="caps.warnAt"></span>
         <input id="caps-threshold" class="field mono center narrow" type="number" min="0" max="999" value="10">
       </label>
-      <button id="btn-caps" class="btn primary">Guardar</button>
+      <button id="btn-caps" class="btn primary" data-i18n="common.save"></button>
     </section>
 
     <section class="sheet" id="sheet-standby">
-      <header class="sheet-head"><h3>Apagado automático</h3><button class="btn small" data-close>Listo</button></header>
-      <p class="muted small">Cuánto espera sin uso antes de pasar a reposo.</p>
+      <header class="sheet-head"><h3 data-i18n="menu.standby"></h3><button class="btn small" data-close data-i18n="common.done"></button></header>
+      <p class="muted small" data-i18n="standby.text"></p>
       <div class="segmented" id="standby"></div>
     </section>
 
     <section class="sheet" id="sheet-hardness">
-      <header class="sheet-head"><h3>Dureza del agua</h3><button class="btn small" data-close>Listo</button></header>
-      <p class="muted small">Define cada cuánto avisa que hay que descalcificar.</p>
+      <header class="sheet-head"><h3 data-i18n="menu.hardness"></h3><button class="btn small" data-close data-i18n="common.done"></button></header>
+      <p class="muted small" data-i18n="hardness.text"></p>
       <div class="segmented" id="hardness"></div>
     </section>
 
     <section class="sheet" id="sheet-maint">
-      <header class="sheet-head"><h3>Mantenimiento</h3><button class="btn small" data-close>Cerrar</button></header>
+      <header class="sheet-head"><h3 data-i18n="menu.maint"></h3><button class="btn small" data-close data-i18n="common.close"></button></header>
       <dl class="kv" id="maintenance"></dl>
     </section>
 
     <section class="sheet" id="sheet-info">
-      <header class="sheet-head"><h3>Información</h3><button class="btn small" data-close>Cerrar</button></header>
+      <header class="sheet-head"><h3 data-i18n="menu.info"></h3><button class="btn small" data-close data-i18n="common.close"></button></header>
       <dl class="kv" id="info"></dl>
       <details>
-        <summary class="small muted">Datos crudos</summary>
+        <summary class="small muted" data-i18n="info.raw"></summary>
         <code id="raw" class="key"></code>
       </details>
     </section>
 
     <section class="sheet" id="sheet-key">
-      <header class="sheet-head"><h3>Clave</h3><button class="btn small" data-close>Cerrar</button></header>
-      <p class="muted small">Usala para vincular otros dispositivos sin gastar una vinculación nueva.</p>
+      <header class="sheet-head"><h3 data-i18n="menu.key"></h3><button class="btn small" data-close data-i18n="common.close"></button></header>
+      <p class="muted small" data-i18n="key.text"></p>
       <code id="key-view" class="key">—</code>
-      <button id="btn-copy-key" class="btn">Copiar</button>
+      <button id="btn-copy-key" class="btn" data-i18n="key.copy"></button>
+    </section>
+
+    <section class="sheet" id="sheet-lang">
+      <header class="sheet-head"><h3 data-i18n="menu.language"></h3><button class="btn small" data-close data-i18n="common.done"></button></header>
+      <p class="muted small" data-i18n="lang.text"></p>
+      <div class="segmented" id="language"></div>
     </section>
 
     <section class="sheet" id="sheet-sim">
-      <header class="sheet-head"><h3>Simulador</h3><button class="btn small" data-close>Cerrar</button></header>
+      <header class="sheet-head"><h3 data-i18n="menu.sim"></h3><button class="btn small" data-close data-i18n="common.close"></button></header>
       <div class="row">
-        <button class="btn small grow" id="sim-water">Quitar/poner agua</button>
-        <button class="btn small grow" id="sim-lever">Abrir y cerrar palanca</button>
+        <button class="btn small grow" id="sim-water" data-i18n="sim.water"></button>
+        <button class="btn small grow" id="sim-lever" data-i18n="sim.lever"></button>
       </div>
     </section>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <div id="busy" class="busy hidden"><div class="spinner"></div><span id="busy-text">Conectando…</span></div>
+    <div id="busy" class="busy hidden"><div class="spinner"></div><span id="busy-text"></span></div>
   </div>
   <script type="module" src="js/app.js"></script>
 </body>

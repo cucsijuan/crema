@@ -2,7 +2,7 @@
   "name": "crema",
   "version": "1.0.0",
   "private": true,
-  "description": "Control por Bluetooth para la cafetera Nespresso Expert",
+  "description": "Bluetooth control for the Nespresso Expert coffee machine",
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
