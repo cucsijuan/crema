@@ -1,0 +1,8 @@
+{
+  "appId": "io.github.cucsijuan.crema",
+  "appName": "Crema",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never"
+  }
+}

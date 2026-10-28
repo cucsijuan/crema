@@ -1,0 +1,20 @@
+{
+  "name": "crema",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Control por Bluetooth para la cafetera Nespresso Expert",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "python3 -m http.server 8765 --bind 127.0.0.1 --directory web"
+  },
+  "dependencies": {
+    "@capacitor-community/bluetooth-le": "^8.3.0",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "esbuild": "^0.28.2"
+  }
+}
